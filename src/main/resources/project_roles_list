@@ -1,0 +1,3 @@
+ROLE_OWNER_projectname - owner
+ROLE_READ_projectname - member(read only)
+ROLE_WRITE_projectname - write
