@@ -75,7 +75,6 @@ public class AuthServiceImpl implements AuthService {
         request.setPassword(passwordEncoder.encode(request.getPassword()));
 
         UserModel user = UserModel.fromRegisterRequest(request);
-
         user.setRoles(Set.of(roleRepository.findByRole(Role.ROLE_USER.toString())));
         user.setStatus(Status.ACTIVE);
 
