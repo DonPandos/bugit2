@@ -4,7 +4,9 @@ import com.study.bugit.constants.Constants;
 import com.study.bugit.dto.request.project.ChangeMemberRolesRequest;
 import com.study.bugit.dto.request.project.CreateProjectRequest;
 import com.study.bugit.dto.response.BaseResponse;
+import com.study.bugit.dto.response.ResponseInformation;
 import com.study.bugit.dto.response.project.ProjectResponse;
+import com.study.bugit.dto.response.project.UserProjectRolesResponse;
 import com.study.bugit.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,7 @@ public class ProjectController {
     public ResponseEntity<List<ProjectResponse>> getProjects(@RequestAttribute("username") String username) {
         log.info("{} -> getProjects(username:" + username + ")");
 
-        return ResponseEntity.ok(projectService.getByUsername(username));
+        return ResponseEntity.ok(projectService.getAllByUsernameWhereMember(username));
     }
 
     @PostMapping("/create")
@@ -40,8 +42,13 @@ public class ProjectController {
         request.setSenderUsername(username);
 
         ProjectResponse response = projectService.create(request);
-        response.setCode(HttpStatus.OK.value());
-        response.setMessage(Constants.PROJECT_SUCCESSFULLY_CREATED);
+
+        response.setResponseInformation(
+                new ResponseInformation(
+                        HttpStatus.OK.value(),
+                        Constants.PROJECT_SUCCESSFULLY_CREATED
+                )
+        );
 
         return ResponseEntity.ok(response);
     }
@@ -55,8 +62,10 @@ public class ProjectController {
         projectService.addMemberToProject(projectName, userName);
 
         BaseResponse response = new BaseResponse(
-                HttpStatus.OK.value(),
-                String.format(Constants.MEMBER_ADDED_TO_PROJECT_FORMAT, userName, projectName)
+                new ResponseInformation(
+                        HttpStatus.OK.value(),
+                        String.format(Constants.MEMBER_ADDED_TO_PROJECT_FORMAT, userName, projectName)
+                )
         );
 
         return ResponseEntity.ok(response);
@@ -65,18 +74,32 @@ public class ProjectController {
     @PostMapping("/roles")
     @PreAuthorize("hasAuthority('ROLE_OWNER_' + #request.projectName.toUpperCase())")
     public ResponseEntity<BaseResponse> changeMemberRoles(@RequestBody ChangeMemberRolesRequest request,
-                                                          @RequestAttribute("username") String userName) {
+                                                          @RequestAttribute("username") String username) {
         log.info("{} -> changeMemberRoles : " + request.toString());
 
-        request.setSenderUsername(userName);
+        request.setSenderUsername(username);
 
-        //todo
         projectService.changeMemberRoles(request);
 
         BaseResponse response = new BaseResponse(
-                HttpStatus.OK.value(),
-                String.format(Constants.ROLES_SUCCESSFULLY_CHANGED_TO_USER_FORMAT, request.getUserName(), request.getProjectName())
+                new ResponseInformation(
+                        HttpStatus.OK.value(),
+                        String.format(Constants.ROLES_SUCCESSFULLY_CHANGED_TO_USER_FORMAT, request.getUserName(), request.getProjectName())
+                )
         );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/roles/project/{projectName}/username/{username}")
+    @PreAuthorize("hasAuthority('ROLE_OWNER_' + #projectName.toUpperCase())")
+    public ResponseEntity<UserProjectRolesResponse> getUserProjectRoles(@PathVariable String projectName,
+                                                                        @PathVariable String username) {
+        log.info("{} -> check roles : " + username + " on project " + projectName);
+
+        UserProjectRolesResponse response = projectService.getUsernameRoles(projectName, username);
+
+        log.info("{} -> check roles result: " + response);
 
         return ResponseEntity.ok(response);
     }

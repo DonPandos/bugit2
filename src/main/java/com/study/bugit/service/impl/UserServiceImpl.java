@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -57,16 +59,46 @@ public class UserServiceImpl implements UserService {
         return userModel;
     }
 
-    public UserModel changeUserRoles(String userName, List<RoleModel> roles) {
+    public UserModel changeUserRoles(String userName, List<RoleModel> roles, String projectName) {
         UserModel userModel = findUserByUsername(userName);
 
         if (userModel == null) {
-            throw new CustomException(HttpStatus.BAD_REQUEST, String.format(ErrorConstants.USER_WITH_THIS_USERNAME_DOES_NOT_EXISTS_FORMAT, userName));
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.USER_WITH_THIS_USERNAME_DOES_NOT_EXISTS_FORMAT, userName)
+            );
         }
+
+        userModel.setRoles(userModel.getRoles().stream()
+                .filter(roleModel -> {
+                    String role = roleModel.getRole();
+                    return !role.substring(role.lastIndexOf("_") + 1)
+                            .equals(projectName.toUpperCase(Locale.ROOT));
+                })
+                .collect(Collectors.toSet()));
 
         roles.forEach(userModel.getRoles()::add);
 
         userRepository.save(userModel);
         return userModel;
+    }
+
+    // returns UserModel if true; else return null
+    @Override
+    public UserModel checkUserRole(String username, String role) {
+        UserModel userModel = findUserByUsername(username);
+
+        if (userModel == null) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.USER_WITH_THIS_USERNAME_DOES_NOT_EXISTS_FORMAT, username)
+            );
+        }
+
+        for (RoleModel roleModel : userModel.getRoles()) {
+            if (roleModel.getRole().equals(role)) return userModel;
+        }
+
+        return null;
     }
 }

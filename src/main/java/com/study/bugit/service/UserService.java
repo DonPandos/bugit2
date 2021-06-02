@@ -9,5 +9,6 @@ public interface UserService {
     UserModel findUserByUsername(String username);
     boolean checkPasswordByUsername(String username, String password);
     UserModel addRoleToUser(String username, RoleModel role);
-    UserModel changeUserRoles(String userName, List<RoleModel> roles);
+    UserModel changeUserRoles(String userName, List<RoleModel> roles, String projectName);
+    UserModel checkUserRole(String username, String role);
 }

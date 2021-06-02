@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BaseResponse {
-    private ResponseInformation responseInformation;
+public class ResponseInformation {
+    private Integer code;
+    private String message;
 }

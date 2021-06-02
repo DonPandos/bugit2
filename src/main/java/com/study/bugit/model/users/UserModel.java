@@ -3,13 +3,11 @@ package com.study.bugit.model.users;
 import com.study.bugit.dto.request.auth.RegisterRequest;
 import com.study.bugit.dto.response.UserResponse;
 import com.study.bugit.model.BaseEntity;
-import com.study.bugit.model.ProjectModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -61,15 +59,6 @@ public class UserModel extends BaseEntity {
         userModel.setLastName(request.getLastName());
 
         return userModel;
-//        return new UserModel(
-//                request.getUsername(),
-//                request.getPassword(),
-//                request.getEmail(),
-//                request.getFirstName(),
-//                request.getLastName(),
-//                null,
-//                Status.ACTIVE
-//        );
     }
 
     public UserResponse toUserResponse() {

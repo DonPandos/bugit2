@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -37,9 +39,9 @@ public class ProjectModel extends BaseEntity {
                     referencedColumnName = "id"
             )
     )
-    private List<UserModel> members;
+    private Set<UserModel> members;
 
-    public static ProjectModel createModel(CreateProjectRequest request, List<UserModel> members) {
+    public static ProjectModel createModel(CreateProjectRequest request, Set<UserModel> members) {
         return new ProjectModel(
                 request.getName(),
                 request.getDescription(),

@@ -1,8 +1,11 @@
 package com.study.bugit.jwt;
 
+import com.study.bugit.constants.ErrorConstants;
+import com.study.bugit.exception.CustomException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -32,12 +35,14 @@ public class JwtTokenProvider {
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.info("{} -> Jwt expired");
         } catch (Exception e) {
             log.info("{} -> Invalid jwt token");
         }
+
         return false;
-//        } catch (ExpiredJwtException e) {
-//            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.JWT_TOKEN_EXPIRED);
+    }
 //        } catch (UnsupportedJwtException e) {
 //            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.UNSUPPORTED_JWT);
 //        } catch (MalformedJwtException e) {
@@ -47,7 +52,6 @@ public class JwtTokenProvider {
 //        } catch (Exception e) {
 //            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.INVALID_JWT);
 //        }
-    }
 
     public String getLoginFromToken(String token) {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();

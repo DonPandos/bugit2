@@ -5,10 +5,13 @@ import com.study.bugit.constants.ErrorConstants;
 import com.study.bugit.dto.request.project.ChangeMemberRolesRequest;
 import com.study.bugit.dto.request.project.CreateProjectRequest;
 import com.study.bugit.dto.response.project.ProjectResponse;
+import com.study.bugit.dto.response.project.UserProjectRolesResponse;
 import com.study.bugit.exception.CustomException;
+import com.study.bugit.model.IssueModel;
 import com.study.bugit.model.ProjectModel;
 import com.study.bugit.model.users.RoleModel;
 import com.study.bugit.model.users.UserModel;
+import com.study.bugit.repository.IssueRepository;
 import com.study.bugit.repository.ProjectRepository;
 import com.study.bugit.repository.RoleRepository;
 import com.study.bugit.service.ProjectService;
@@ -16,28 +19,33 @@ import com.study.bugit.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final RoleRepository roleRepository;
+    private final IssueRepository issueRepository;
     private final UserService userService;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository, RoleRepository roleRepository, UserService userService) {
+    public ProjectServiceImpl(ProjectRepository projectRepository, RoleRepository roleRepository, IssueRepository issueRepository, UserService userService) {
         this.projectRepository = projectRepository;
         this.roleRepository = roleRepository;
+        this.issueRepository = issueRepository;
         this.userService = userService;
     }
 
     @Override
-    public List<ProjectResponse> getByUsername(String username) {
-        List<ProjectModel> projectModels = projectRepository.findAllByOwnerOrderByCreatedAt(username);
-
-
-        return null;
+    public List<ProjectResponse> getAllByUsernameWhereMember(String username) {
+        List<ProjectModel> projectModels = projectRepository.findAllByMembersOrderByCreatedAt(userService.findUserByUsername(username));
+        List<ProjectResponse> projectResponses = projectModels.stream()
+                .map(ProjectResponse::fromProjectModel)
+                .collect(Collectors.toList());
+        return projectResponses;
     }
 
     @Override
@@ -49,7 +57,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectModel projectModel = ProjectModel.createModel(
                 request,
-                List.of(userService.findUserByUsername(request.getSenderUsername()))
+                Set.of(userService.findUserByUsername(request.getSenderUsername()))
         );
 
         addRolesToOwnerAfterProjectCreating(request.getName(), request.getSenderUsername());
@@ -102,11 +110,57 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(roleRepository::findByRole)
                 .collect(Collectors.toList());
 
-        userService.changeUserRoles(request.getUserName(), roleModelList);
+        userService.changeUserRoles(request.getUserName(), roleModelList, request.getProjectName());
     }
 
-    private ProjectModel getProjectByName(String projectName) {
+    public ProjectModel getProjectByName(String projectName) {
         return projectRepository.findByName(projectName);
+    }
+
+    @Override
+    public ProjectModel getProjectByIssueNumber(String issueNumber) {
+        IssueModel issueModel = issueRepository.findByIssueNumber(issueNumber);
+
+        if (Objects.isNull(issueModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.ISSUE_DOES_NOT_EXISTS, issueNumber)
+            );
+        }
+
+        return issueModel.getProject();
+    }
+
+    @Override
+    public UserProjectRolesResponse getUsernameRoles(String projectName, String username) {
+
+        ProjectModel projectModel = getProjectByName(projectName);
+
+        if (Objects.isNull(projectModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.PROJECT_WITH_NAME_NOT_EXISTS_FORMAT, projectName)
+            );
+        }
+
+        if (!isMemberByUsername(username, projectModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.USERNAME_NOT_MEMBER_OF_PROJECT, username, projectName)
+            );
+        }
+
+        UserModel userModel = userService.findUserByUsername(username);
+
+        List<String> userRoles = userModel.getRoles().stream()
+                .filter(roleModel -> {
+                    String role = roleModel.getRole();
+                    return role.substring(role.lastIndexOf("_") + 1, role.length()).equals(projectName.toUpperCase(Locale.ROOT));
+                })
+                .map(RoleModel::getRole)
+                .collect(Collectors.toList());
+
+        return new UserProjectRolesResponse(userRoles);
     }
 
     private void addRolesToOwnerAfterProjectCreating(String projectName, String userName) {
@@ -121,7 +175,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private boolean isMemberByUsername(String userName, ProjectModel projectModel) {
-        return projectModel.getMembers().stream()
+        return projectModel.getMembers()
+                .stream()
                 .anyMatch(userModel -> userModel.getUserName().equals(userName));
     }
 

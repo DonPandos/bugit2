@@ -20,5 +20,8 @@ public class ErrorConstants {
     public static final String USER_ALREADY_MEMBER_OF_PROJECT_FORMAT = "User %s already member of project %s";
     public static final String USERNAME_NOT_MEMBER_OF_PROJECT = "User %s not member of %s project";
 
+    //issues
+    public static final String ISSUE_DOES_NOT_EXISTS = "Issue %s does not exists";
+
 
 }

@@ -19,14 +19,8 @@ public class CommentModel extends BaseEntity {
     private String text;
 
     @ManyToOne
-    private CommentModel parent;
-
-    @ManyToOne
     private UserModel owner;
 
     @ManyToOne
     private IssueModel issue;
-
-    @OneToMany(mappedBy = "parent")
-    private List<CommentModel> childComments;
 }
