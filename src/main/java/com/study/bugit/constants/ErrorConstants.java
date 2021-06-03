@@ -23,5 +23,9 @@ public class ErrorConstants {
     //issues
     public static final String ISSUE_DOES_NOT_EXISTS = "Issue %s does not exists";
 
+    //comments
+    public static final String COMMENT_DOES_NOT_EXISTS = "Comment does not exists";
 
+    //permissions
+    public static final String DONT_HAVE_PERMISSIONS = "You don't have permission to this action";
 }

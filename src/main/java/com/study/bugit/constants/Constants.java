@@ -22,4 +22,9 @@ public class Constants {
     public static final String ISSUE_SUCCESSFULLY_UPDATED = "Issue was successfully updated";
     public static final String ISSUE_SUCCESSFULLY_DELETED = "Issue was successfully deleted";
     public static final String TIME_LOGGED_SUCCESSFULLY = "Time logged successfully";
+
+    //comments
+    public static final String COMMENT_SUCCESSFULLY_ADDED = "Comment was successfully added";
+    public static final String COMMENT_SUCCESSFULLY_DELETED = "Comment was successfully deleted";
+
 }

@@ -1,5 +1,7 @@
 package com.study.bugit.model;
 
+import com.study.bugit.dto.request.comment.CreateCommentRequest;
+import com.study.bugit.dto.response.comment.CommentResponse;
 import com.study.bugit.model.users.UserModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +23,14 @@ public class CommentModel extends BaseEntity {
     @ManyToOne
     private UserModel owner;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private IssueModel issue;
+
+    public CommentResponse toResponse() {
+        return new CommentResponse(
+                text,
+                owner.toUserResponse(),
+                issue.getIssueNumber()
+        );
+    }
 }

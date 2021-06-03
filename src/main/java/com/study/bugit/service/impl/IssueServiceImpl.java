@@ -180,6 +180,14 @@ public class IssueServiceImpl implements IssueService {
         issueRepository.save(issueModel);
 
         UserModel userModel = userService.findUserByUsername(username);
+
+        if (Objects.isNull(userModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.USER_WITH_THIS_USERNAME_DOES_NOT_EXISTS_FORMAT, username)
+            );
+        }
+
         LoggedTimeModel loggedTimeModel = LoggedTimeModel.fromLogTimeRequest(
                 request,
                 issueModel,

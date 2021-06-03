@@ -46,15 +46,6 @@ public class JwtTokenProvider {
 
         return false;
     }
-//        } catch (UnsupportedJwtException e) {
-//            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.UNSUPPORTED_JWT);
-//        } catch (MalformedJwtException e) {
-//            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.MALFORMED_JWT);
-//        } catch (SignatureException e) {
-//            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.INVALID_SIGNATURE);
-//        } catch (Exception e) {
-//            throw new CustomException(HttpStatus.FORBIDDEN, ErrorConstants.INVALID_JWT);
-//        }
 
     public String getLoginFromToken(String token) {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
