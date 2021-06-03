@@ -21,5 +21,5 @@ public class Constants {
     public static final String ISSUE_SUCCESSFULLY_CREATED = "Issue was successfully created";
     public static final String ISSUE_SUCCESSFULLY_UPDATED = "Issue was successfully updated";
     public static final String ISSUE_SUCCESSFULLY_DELETED = "Issue was successfully deleted";
-
+    public static final String TIME_LOGGED_SUCCESSFULLY = "Time logged successfully";
 }

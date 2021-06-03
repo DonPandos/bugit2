@@ -2,11 +2,12 @@ package com.study.bugit.controller;
 
 import com.study.bugit.constants.Constants;
 import com.study.bugit.dto.request.issue.CreateIssueRequest;
+import com.study.bugit.dto.request.issue.LogTimeRequest;
 import com.study.bugit.dto.request.issue.UpdateIssueRequest;
 import com.study.bugit.dto.response.ResponseInformation;
 import com.study.bugit.dto.response.issue.IssueResponse;
+import com.study.bugit.dto.response.issue.LogTimeResponse;
 import com.study.bugit.service.IssueService;
-import com.study.bugit.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,6 +88,8 @@ public class IssueController {
     }
 
     @GetMapping("/issueNumber/{issueNumber}")
+    @PreAuthorize("hasAuthority('ROLE_READ_' + " +
+            "#issueNumber.substring(0, #issueNumber.lastIndexOf('-')).toUpperCase())")
     public ResponseEntity<IssueResponse> getIssue(@PathVariable String issueNumber) {
         log.info("{} -> get issue: " + issueNumber);
 
@@ -98,13 +101,34 @@ public class IssueController {
     }
 
     @GetMapping("/project/{projectName}")
+    @PreAuthorize("hasAuthority('ROLE_READ_' + " +
+            "#projectName.toUpperCase())")
     public ResponseEntity<List<IssueResponse>> getIssuesByProject(@PathVariable String projectName) {
         log.info("{} -> get project issues: " + projectName);
 
         List<IssueResponse> response = issueService.getIssuesByProjectName(projectName);
 
         log.info("{} -> get project issues result: " + response.toString());
+
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/logtime")
+    @PreAuthorize("hasAuthority('ROLE_READ_' + " +
+            "#request.issueNumber.substring(0, #request.issueNumber.lastIndexOf('-')).toUpperCase())")
+    public ResponseEntity<LogTimeResponse> logTime(@RequestBody LogTimeRequest request,
+                                                   @RequestAttribute("username") String username) {
+        log.info("{} -> log time: " + request.toString() + "; username: " + username);
+
+        LogTimeResponse logTimeResponse = issueService.logTime(request, username);
+
+        logTimeResponse.setResponseInformation(
+                new ResponseInformation(
+                        HttpStatus.OK.value(),
+                        Constants.TIME_LOGGED_SUCCESSFULLY
+                )
+        );
+
+        return ResponseEntity.ok(logTimeResponse);
+    }
 }

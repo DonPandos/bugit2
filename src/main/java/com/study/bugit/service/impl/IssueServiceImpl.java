@@ -3,19 +3,24 @@ package com.study.bugit.service.impl;
 import com.study.bugit.constants.Constants;
 import com.study.bugit.constants.ErrorConstants;
 import com.study.bugit.dto.request.issue.CreateIssueRequest;
+import com.study.bugit.dto.request.issue.LogTimeRequest;
 import com.study.bugit.dto.request.issue.UpdateIssueRequest;
 import com.study.bugit.dto.response.issue.IssueResponse;
+import com.study.bugit.dto.response.issue.LogTimeResponse;
 import com.study.bugit.exception.CustomException;
 import com.study.bugit.model.IssueModel;
+import com.study.bugit.model.LoggedTimeModel;
 import com.study.bugit.model.ProjectModel;
 import com.study.bugit.model.users.UserModel;
 import com.study.bugit.repository.IssueRepository;
+import com.study.bugit.repository.LoggedTimeRepository;
 import com.study.bugit.service.IssueService;
 import com.study.bugit.service.ProjectService;
 import com.study.bugit.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -25,11 +30,13 @@ import java.util.stream.Collectors;
 public class IssueServiceImpl implements IssueService {
 
     private final IssueRepository issueRepository;
+    private final LoggedTimeRepository loggedTimeRepository;
     private final ProjectService projectService;
     private final UserService userService;
 
-    public IssueServiceImpl(IssueRepository issueRepository, ProjectService projectService, UserService userService) {
+    public IssueServiceImpl(IssueRepository issueRepository, LoggedTimeRepository loggedTimeRepository, ProjectService projectService, UserService userService) {
         this.issueRepository = issueRepository;
+        this.loggedTimeRepository = loggedTimeRepository;
         this.projectService = projectService;
         this.userService = userService;
     }
@@ -147,5 +154,40 @@ public class IssueServiceImpl implements IssueService {
                 .collect(Collectors.toList());
 
         return issueResponses;
+    }
+
+    @Override
+    public LogTimeResponse logTime(LogTimeRequest request, String username) {
+
+        IssueModel issueModel = issueRepository.findByIssueNumber(request.getIssueNumber());
+
+        if (Objects.isNull(issueModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.ISSUE_DOES_NOT_EXISTS, request.getIssueNumber())
+            );
+        }
+
+        long timeRemaining = issueModel.getTimeRemaining().toSeconds();
+
+        issueModel.setTimeRemaining(timeRemaining > request.getTimeInSeconds() ?
+                Duration.ofSeconds(timeRemaining - request.getTimeInSeconds()) :
+                Duration.ofSeconds(0L)
+        );
+
+        issueModel.setLoggedTime(issueModel.getLoggedTime().plusSeconds(request.getTimeInSeconds()));
+
+        issueRepository.save(issueModel);
+
+        UserModel userModel = userService.findUserByUsername(username);
+        LoggedTimeModel loggedTimeModel = LoggedTimeModel.fromLogTimeRequest(
+                request,
+                issueModel,
+                userModel
+        );
+
+        loggedTimeRepository.save(loggedTimeModel);
+
+        return loggedTimeModel.toResponse();
     }
 }

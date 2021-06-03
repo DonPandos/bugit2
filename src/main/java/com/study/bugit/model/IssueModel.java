@@ -45,6 +45,9 @@ public class IssueModel extends BaseEntityWithoutId implements Serializable {
     @Column(name = "time_remaining")
     private Duration timeRemaining;
 
+    @Column(name = "logged_time")
+    private Duration loggedTime;
+
     @Column(name = "priority")
     private String priority;
 
@@ -70,6 +73,7 @@ public class IssueModel extends BaseEntityWithoutId implements Serializable {
         issueModel.setDescription(request.getDescription());
         issueModel.setOriginalEstimate(Duration.ofSeconds(request.getOriginalEstimate()));
         issueModel.setTimeRemaining(Duration.ofSeconds(request.getTimeRemaining()));
+        issueModel.setLoggedTime(Duration.ofSeconds(0));
         issueModel.setPriority(request.getPriority());
         issueModel.setProject(projectModel);
         issueModel.setReporter(reporter);
