@@ -11,4 +11,5 @@ public interface UserService {
     UserModel addRoleToUser(String username, RoleModel role);
     UserModel changeUserRoles(String userName, List<RoleModel> roles, String projectName);
     UserModel checkUserRole(String username, String role);
+    List<UserModel> findAllUsersByRole(String role);
 }

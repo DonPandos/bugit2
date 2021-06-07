@@ -49,7 +49,8 @@ public class IssueController {
     }
 
     @PostMapping("/update")
-    @PreAuthorize("hasAuthority('ROLE_WRITE_' + #request.projectName.toUpperCase())")
+    @PreAuthorize("hasAuthority('ROLE_WRITE_' + " +
+            "#request.issueNumber.substring(0, #request.issueNumber.lastIndexOf('-')).toUpperCase())")
     public ResponseEntity<IssueResponse> updateIssue(@RequestBody UpdateIssueRequest request) {
         log.info("{} -> issue update: " + request.toString());
 

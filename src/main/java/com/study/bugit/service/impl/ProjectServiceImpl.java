@@ -4,6 +4,9 @@ import com.study.bugit.constants.Constants;
 import com.study.bugit.constants.ErrorConstants;
 import com.study.bugit.dto.request.project.ChangeMemberRolesRequest;
 import com.study.bugit.dto.request.project.CreateProjectRequest;
+import com.study.bugit.dto.response.UserResponse;
+import com.study.bugit.dto.response.project.MemberWithRolesResponse;
+import com.study.bugit.dto.response.project.ProjectMembersResponse;
 import com.study.bugit.dto.response.project.ProjectResponse;
 import com.study.bugit.dto.response.project.UserProjectRolesResponse;
 import com.study.bugit.exception.CustomException;
@@ -68,9 +71,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void addMemberToProject(String projectName, String userName) {
+    public MemberWithRolesResponse addMemberToProject(String projectName, String userName) {
         ProjectModel projectModel = getProjectByName(projectName);
-        if  (Objects.isNull(projectModel)) {
+        if (Objects.isNull(projectModel)) {
             throw new CustomException(HttpStatus.BAD_REQUEST, String.format(ErrorConstants.PROJECT_WITH_NAME_NOT_EXISTS_FORMAT, projectName));
         }
 
@@ -92,6 +95,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectModel.getMembers().add(userModel);
         projectRepository.save(projectModel);
+
+        return userModel.toMemberWithRolesResponse(projectName);
     }
 
     @Override
@@ -161,6 +166,48 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
 
         return new UserProjectRolesResponse(userRoles);
+    }
+
+    @Override
+    public ProjectMembersResponse getProjectMembers(String projectName) {
+        ProjectModel projectModel = getProjectByName(projectName);
+
+        if (Objects.isNull(projectModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.PROJECT_WITH_NAME_NOT_EXISTS_FORMAT, projectName)
+            );
+        }
+
+        List<UserModel> userModels = userService.findAllUsersByRole(Constants.READ_ROLE_TEMPLATE + projectName.toUpperCase(Locale.ROOT));
+
+        ProjectMembersResponse response = new ProjectMembersResponse(
+                userModels.stream()
+                        .map(userModel -> userModel.toUserResponse())
+                        .collect(Collectors.toList())
+        );
+
+        return response;
+    }
+
+    @Override
+    public List<MemberWithRolesResponse> getMembersWithRoles(String projectName) {
+        ProjectModel projectModel = getProjectByName(projectName);
+
+        if (Objects.isNull(projectModel)) {
+            throw new CustomException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(ErrorConstants.PROJECT_WITH_NAME_NOT_EXISTS_FORMAT, projectName)
+            );
+        }
+
+        List<MemberWithRolesResponse> responses = new ArrayList<>();
+
+        projectModel.getMembers().forEach(userModel -> {
+            responses.add(userModel.toMemberWithRolesResponse(projectName));
+        });
+
+        return responses;
     }
 
     private void addRolesToOwnerAfterProjectCreating(String projectName, String userName) {

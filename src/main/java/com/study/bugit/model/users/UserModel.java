@@ -2,12 +2,16 @@ package com.study.bugit.model.users;
 
 import com.study.bugit.dto.request.auth.RegisterRequest;
 import com.study.bugit.dto.response.UserResponse;
+import com.study.bugit.dto.response.project.MemberWithRolesResponse;
 import com.study.bugit.model.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Entity
@@ -67,6 +71,24 @@ public class UserModel extends BaseEntity {
                 email,
                 firstName,
                 lastName
+        );
+    }
+
+    public MemberWithRolesResponse toMemberWithRolesResponse(String projectName) {
+        List<String> roles = new ArrayList<>();
+        this.roles.forEach(roleModel -> {
+            String role = roleModel.getRole();
+            if (role.substring(role.lastIndexOf('_') + 1).equals(projectName.toUpperCase(Locale.ROOT))) {
+                roles.add(role.substring(role.indexOf('_') + 1, role.lastIndexOf('_')));
+            }
+        });
+
+        return new MemberWithRolesResponse(
+                userName,
+                email,
+                firstName,
+                lastName,
+                roles
         );
     }
 }

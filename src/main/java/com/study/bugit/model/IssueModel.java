@@ -98,11 +98,13 @@ public class IssueModel extends BaseEntityWithoutId implements Serializable {
     }
 
     public void update(UpdateIssueRequest request) {
-        this.status = request.getStatus();
-        this.name = request.getName();
-        this.description = request.getDescription();
-        this.originalEstimate = Duration.ofSeconds(request.getOriginalEstimate());
-        this.timeRemaining = Duration.ofSeconds(request.getTimeRemaining());
-        this.priority = request.getPriority();
+        this.status = Objects.nonNull(request.getStatus()) ? request.getStatus() : this.status;
+        this.name = Objects.nonNull(request.getName()) ? request.getName() : this.name;
+        this.description = Objects.nonNull(request.getDescription()) ? request.getDescription() : this.description;
+        this.originalEstimate = Objects.nonNull(request.getOriginalEstimate()) ?
+                Duration.ofSeconds(request.getOriginalEstimate()) : this.originalEstimate;
+        this.timeRemaining = Objects.nonNull(request.getTimeRemaining()) ?
+                Duration.ofSeconds(request.getTimeRemaining()) : this.timeRemaining;
+        this.priority = Objects.nonNull(request.getPriority()) ? request.getPriority() : this.priority;
     }
 }

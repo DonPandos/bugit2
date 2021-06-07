@@ -91,23 +91,24 @@ public class IssueServiceImpl implements IssueService {
                     String.format(ErrorConstants.ISSUE_DOES_NOT_EXISTS, request.getIssueNumber())
             );
         }
+        if (Objects.nonNull(request.getAssigneeUsername())) {
+            String projectName = issueModel.getProject().getName();
 
-        String projectName = issueModel.getProject().getName();
-
-        if (!request.getAssigneeUsername().equals(issueModel.getAssignee().getUserName())) {
-            UserModel assigneeUserModel = userService.checkUserRole(
-                    request.getAssigneeUsername(),
-                    Constants.READ_ROLE_TEMPLATE + projectName.toUpperCase(Locale.ROOT)
-            );
-
-            if (Objects.isNull(assigneeUserModel)) {
-                throw new CustomException(
-                        HttpStatus.BAD_REQUEST,
-                        String.format(ErrorConstants.USERNAME_NOT_MEMBER_OF_PROJECT, assigneeUserModel.getUserName(), projectName)
+            if (!request.getAssigneeUsername().equals(issueModel.getAssignee().getUserName())) {
+                UserModel assigneeUserModel = userService.checkUserRole(
+                        request.getAssigneeUsername(),
+                        Constants.READ_ROLE_TEMPLATE + projectName.toUpperCase(Locale.ROOT)
                 );
-            }
 
-            issueModel.setAssignee(assigneeUserModel);
+                if (Objects.isNull(assigneeUserModel)) {
+                    throw new CustomException(
+                            HttpStatus.BAD_REQUEST,
+                            String.format(ErrorConstants.USERNAME_NOT_MEMBER_OF_PROJECT, assigneeUserModel.getUserName(), projectName)
+                    );
+                }
+
+                issueModel.setAssignee(assigneeUserModel);
+            }
         }
 
         issueModel.update(request);

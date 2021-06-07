@@ -1,8 +1,6 @@
 package com.study.bugit.service.impl;
 
 import com.study.bugit.constants.ErrorConstants;
-import com.study.bugit.dto.request.CreateUserRequest;
-import com.study.bugit.dto.response.UserResponse;
 import com.study.bugit.exception.CustomException;
 import com.study.bugit.model.users.RoleModel;
 import com.study.bugit.model.users.UserModel;
@@ -100,5 +98,18 @@ public class UserServiceImpl implements UserService {
         }
 
         return null;
+    }
+
+    @Override
+    public List<UserModel> findAllUsersByRole(String role) {
+        List<UserModel> userModels = userRepository.findAll().stream()
+                .filter(userModel ->
+                        userModel.getRoles().stream()
+                                .filter(roleModel -> roleModel.getRole().equals(role))
+                                .count() > 0
+                )
+                .collect(Collectors.toList());
+
+        return userModels;
     }
 }
